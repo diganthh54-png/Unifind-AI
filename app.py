@@ -226,3 +226,54 @@ if reports:
             st.write("Type:", report["type"])
 else:
     st.info("No reports available.")
+
+    # UniFind AI Chat Box
+
+st.subheader("💬 UniFind AI Chat Assistant")
+st.write("Ask me about lost and found items!")
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+
+user_message = st.chat_input("Type your message here...")
+
+if user_message:
+    st.session_state.chat_history.append({
+        "role": "user",
+        "content": user_message
+    })
+
+    reports = load_reports()
+    query = user_message.lower()
+    matches = []
+
+    if isinstance(reports, list):
+        for report in reports:
+            if isinstance(report, dict):
+                searchable_text = " ".join(
+                    str(value) for value in report.values()
+                ).lower()
+
+                if any(word in searchable_text for word in query.split()):
+                    matches.append(report)
+
+    if matches:
+        reply = "I found these possible matching reports:\n\n"
+        for report in matches[:5]:
+            reply += str(report) + "\n\n"
+    else:
+        reply = (
+            "I couldn't find a matching report yet. "
+            "Try describing the item, its colour, or where you lost it."
+        )
+
+    st.session_state.chat_history.append({
+        "role": "assistant",
+        "content": reply
+    })
+
+    st.rerun()
